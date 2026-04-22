@@ -246,6 +246,33 @@
     .module-cards, .two-col { grid-template-columns: 1fr; }
     nav#sidebar { display: none; }
   }
+
+  /* ─── BREADCRUMB ─── */
+  .breadcrumb { margin-bottom: 16px; }
+  .btn-breadcrumb {
+    background: none; border: none; cursor: pointer;
+    font-size: 0.82rem; color: var(--azul-medio);
+    padding: 0; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .btn-breadcrumb:hover { color: var(--azul-oscuro); text-decoration: underline; }
+  /* ─── BOTTOM UNIT NAV ─── */
+  .unit-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 40px; padding-top: 24px;
+    border-top: 2px solid var(--azul-claro); gap: 12px;
+  }
+  .btn-unit-prev, .btn-unit-next {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 8px; font-size: 0.88rem;
+    font-weight: 600; cursor: pointer; transition: all 0.15s;
+    text-decoration: none; border: 2px solid var(--azul-oscuro);
+  }
+  .btn-unit-prev { background: #fff; color: var(--azul-oscuro); }
+  .btn-unit-prev:hover { background: var(--azul-claro); }
+  .btn-unit-next { background: var(--azul-oscuro); color: #fff; margin-left: auto; }
+  .btn-unit-next:hover { background: #1a3ca8; }
+  .nav-quiz-hint { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; margin-left: auto; }
 </style>
 </head>
 <body>
@@ -1372,13 +1399,16 @@ const totalUnits = units.filter(u => u.quiz !== null).length;
 let completedUnits = new Set();
 const answers = {};
 
-function showUnit(id) {
+function showUnit(id, skipHistory) {
   currentUnit = id;
   const u = units[id];
   const main = document.getElementById('main-content');
 
-  // Build HTML
+  if (!skipHistory) history.pushState({ unit: id }, '', '#u' + id);
+
   let html = '';
+  if (id > 0) html += `<div class="breadcrumb"><button class="btn-breadcrumb" onclick="showUnit(0)">← Inicio del curso</button></div>`;
+
   if (u.tag) {
     html += `<div class="unit-tag">${u.tag}</div>`;
     html += `<div class="unit-title">${u.title}</div>`;
@@ -1386,20 +1416,37 @@ function showUnit(id) {
   }
   html += u.html;
 
-  // Quiz
-  if (u.quiz) {
-    html += buildQuiz(u);
+  if (u.quiz) html += buildQuiz(u);
+
+  // Bottom navigation
+  if (id > 0) {
+    const prevId = id - 1;
+    const nextId = id + 1 < units.length ? id + 1 : null;
+    const prevLabel = prevId === 0 ? '← Inicio del curso' : `← ${units[prevId].title}`;
+    html += `<div class="unit-nav">`;
+    html += `<button class="btn-unit-prev" onclick="showUnit(${prevId})">${prevLabel}</button>`;
+    if (nextId !== null) {
+      if (u.quiz) {
+        html += `<span class="nav-quiz-hint" id="hint-${id}">Completá el cuestionario para continuar</span>`;
+        html += `<button class="btn-unit-next" id="nav-next-${id}" onclick="showUnit(${nextId})" style="display:none">${units[nextId].title} →</button>`;
+      } else {
+        html += `<button class="btn-unit-next" onclick="showUnit(${nextId})">${units[nextId].title} →</button>`;
+      }
+    }
+    html += `</div>`;
   }
 
   main.innerHTML = html;
   main.scrollTop = 0;
-  window.scrollTo(0,0);
-
-  // Update nav
+  window.scrollTo(0, 0);
   document.querySelectorAll('nav#sidebar a').forEach(a => a.classList.remove('active'));
   const navEl = document.getElementById('nav-' + id);
   if (navEl) navEl.classList.add('active');
 }
+
+window.addEventListener('popstate', function(e) {
+  showUnit(e.state && e.state.unit !== undefined ? e.state.unit : 0, true);
+});
 
 function buildQuiz(u) {
   let html = `<div class="quiz-section" id="quiz-${u.id}">
@@ -1513,8 +1560,25 @@ function submitQuiz(uid) {
     updateProgress();
     const nextId = uid + 1;
     if (nextId < units.length) {
-      document.getElementById(`next-${uid}`).innerHTML =
-        `<button class="btn-next" onclick="showUnit(${nextId})">Continuar →</button>`;
+      // Reveal bottom nav next button and hide hint
+      const navNext = document.getElementById(`nav-next-${uid}`);
+      if (navNext) {
+        navNext.style.display = 'inline-flex';
+        const hint = document.getElementById(`hint-${uid}`);
+        if (hint) hint.style.display = 'none';
+      }
+    }
+  } else {
+    const nextIdF = uid + 1;
+    if (nextIdF < units.length) {
+      const navNextF = document.getElementById(`nav-next-${uid}`);
+      if (navNextF) {
+        navNextF.style.display = 'inline-flex';
+        navNextF.style.background = '#64748b';
+        navNextF.style.borderColor = '#64748b';
+        const hintF = document.getElementById(`hint-${uid}`);
+        if (hintF) hintF.style.display = 'none';
+      }
     }
   }
 }
@@ -1527,7 +1591,8 @@ function updateProgress() {
 }
 
 // Init
-showUnit(0);
+history.replaceState({ unit: 0 }, '', '#u0');
+showUnit(0, true);
 </script>
 <script>
 // Handle YouTube embed errors (e.g. error 153 = embedding disabled)

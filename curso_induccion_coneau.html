@@ -1446,9 +1446,15 @@ let currentUnit = 0;
 const completed = new Set();
 
 // ─── RENDER ───────────────────────────────────────────
-function showUnit(index) {
+function showUnit(index, skipHistory) {
   currentUnit = index;
   const unit = units[index];
+
+  // Browser history
+  if (!skipHistory) {
+    history.pushState({ unit: index }, '', '#u' + index);
+  }
+
   document.querySelectorAll('nav#sidebar a').forEach(a => a.classList.remove('active'));
   const navEl = document.getElementById('nav-' + index);
   if (navEl) navEl.classList.add('active');
@@ -1458,6 +1464,7 @@ function showUnit(index) {
     html = unit.html;
   } else {
     html = `
+      <div class="breadcrumb"><button class="btn-breadcrumb" onclick="showUnit(0)">← Inicio del curso</button></div>
       <div class="unit-header">
         <div class="unit-tag">${unit.tag}</div>
         <h1 class="unit-title">${unit.title}</h1>
@@ -1474,6 +1481,12 @@ function showUnit(index) {
   if (index > 0) { completed.add(index); updateProgress(); }
   return false;
 }
+
+// Browser back/forward
+window.addEventListener('popstate', function(e) {
+  const id = e.state && e.state.unit !== undefined ? e.state.unit : 0;
+  showUnit(id, true);
+});
 
 function renderQuiz(quiz, uid) {
   let h = `
@@ -1572,7 +1585,8 @@ function updateProgress() {
   document.getElementById('progress-count').textContent = `${done} de ${total} unidades completadas`;
 }
 
-showUnit(0);
+history.replaceState({ unit: 0 }, '', '#u0');
+showUnit(0, true);
 </script>
 </body>
 </html>

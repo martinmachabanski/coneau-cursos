@@ -582,7 +582,6 @@
     </a>
 
   </div>
-  <a class="btn-other-course" href="curso_coneau_global.html">Capacitación CONEAU Global →</a>
   <div class="header-course-name">
     Procedimientos de Acreditación<br>de Carreras de Grado · 2026
   </div>
@@ -1585,7 +1584,7 @@ function updateProgress() {
   document.getElementById('progress-count').textContent = `${done} de ${total} unidades completadas`;
 }
 
-history.replaceState({ unit: 0 }, '', '#u0');
+try { history.replaceState({ unit: 0 }, '', '#u0'); } catch(e) {}
 showUnit(0, true);
 </script>
 </body>

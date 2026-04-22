@@ -605,7 +605,6 @@
 </svg>
     </a>
   </div>
-  <a class="btn-other-course" href="curso_induccion_coneau.html">← Capacitación sobre los procedimientos de acreditación</a>
   <div class="header-course-name">
     Introducción a CONEAU Global<br>Acreditación de Carreras de Grado · 2026
   </div>
@@ -869,6 +868,11 @@ const units = [
           </div>
         </li>
       </ol>
+
+      <div class="video-label">🎬 Video complementario</div>
+      <div class="video-wrapper" id="vw-wM0bxNmrMrc">
+        <iframe src="https://www.youtube-nocookie.com/embed/wM0bxNmrMrc?si=FFo-3yrPlEdNrQ8l" title="CONEAU Global — Introducción al sistema" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
     </div>
   `,
   quiz: {
@@ -1404,7 +1408,7 @@ function showUnit(id, skipHistory) {
   const u = units[id];
   const main = document.getElementById('main-content');
 
-  if (!skipHistory) history.pushState({ unit: id }, '', '#u' + id);
+  if (!skipHistory) try { history.pushState({ unit: id }, '', '#u' + id); } catch(e) {}
 
   let html = '';
   if (id > 0) html += `<div class="breadcrumb"><button class="btn-breadcrumb" onclick="showUnit(0)">← Inicio del curso</button></div>`;
@@ -1591,7 +1595,7 @@ function updateProgress() {
 }
 
 // Init
-history.replaceState({ unit: 0 }, '', '#u0');
+try { history.replaceState({ unit: 0 }, '', '#u0'); } catch(e) {}
 showUnit(0, true);
 </script>
 <script>
